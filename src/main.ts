@@ -1,43 +1,66 @@
-import { 
+import {
   bootstrapCameraKit,
   CameraKitSession,
   createMediaStreamSource,
   Transform2D
 } from "@snap/camera-kit";
 
-const liveRenderTarget = document.getElementById('canvas') as HTMLCanvasElement;
+// Setup canvas and flip button
+const liveRenderTarget = document.getElementById('canvas') as HTMLCanvasElement | null;
 const flipCamera = document.getElementById('flip');
+
+// Alert if DOM elements not found
+if (!liveRenderTarget) alert('Canvas element not found.');
+if (!flipCamera) alert('Flip camera button not found.');
 
 let isBackFacing = true;
 let mediaStream: MediaStream;
 
+// Global error handlers
+window.onerror = function (message, source, lineno, colno, error) {
+  alert(`JS Error:\n${message}\nSource: ${source}\nLine: ${lineno}:${colno}`);
+  return false;
+};
+
+window.onunhandledrejection = function (event) {
+  alert(`Unhandled Promise Rejection:\n${event.reason}`);
+};
+
+// Override console.error to alert
+console.error = function (...args: any[]) {
+  alert('Console Error:\n' + args.join('\n'));
+};
+
 (async function main() {
   try {
+    if (!liveRenderTarget) throw new Error('Canvas element is missing.');
+
     const cameraKit = await bootstrapCameraKit({
-      apiToken: 'eyJhbGciOiJIUzI1NiIsImtpZCI6IkNhbnZhc1MyU0hNQUNQcm9kIiwidHlwIjoiSldUIn0.eyJhdWQiOiJjYW52YXMtY2FudmFzYXBpIiwiaXNzIjoiY2FudmFzLXMyc3Rva2VuIiwibmJmIjoxNzQ0Mzk0NzcyLCJzdWIiOiJkYzMxOTgwMS04YWNlLTRkNmEtYjQ1Yy1hN2FjMjU1ZWUzMmF-U1RBR0lOR343ZjU3NDI2Yy04NmMyLTRiMGEtYjJjNi01YmVkNTMxNmRiNTIifQ.NCLoY8XFI56yF1Ettb7jqEAJ99WEnrw44YQQh6gbhC8'
-  , });
+      apiToken: 'eyJhbGciOiJIUzI1NiIsImtpZCI6IkNhbnZhc1MyU0hNQUNQcm9kIiwidHlwIjoiSldUIn0.eyJhdWQiOiJjYW52YXMtY2FudmFzYXBpIiwiaXNzIjoiY2FudmFzLXMyc3Rva2VuIiwibmJmIjoxNzQ0Mzk0NzcyLCJzdWIiOiJkYzMxOTgwMS04YWNlLTRkNmEtYjQ1Yy1hN2FjMjU1ZWUzMmF-U1RBR0lOR343ZjU3NDI2Yy04NmMyLTRiMGEtYjJjNi01YmVkNTMxNmRiNTIifQ.NCLoY8XFI56yF1Ettb7jqEAJ99WEnrw44YQQh6gbhC8',
+    });
 
     const session = await cameraKit.createSession({ liveRenderTarget });
-    
-    // Load and apply lens
+
     const lens = await cameraKit.lensRepository.loadLens(
       '3e71b80f-6482-4916-9882-6cbeaaa7c72c',
-    '63e0d189-2d1f-4e47-a7e5-8ec40b1f947b'
+      '63e0d189-2d1f-4e47-a7e5-8ec40b1f947b'
     );
     await session.applyLens(lens);
 
     setupFlipButton(session);
     await initializeCamera(session);
 
-  } catch (error) {
-    console.error('Initialization error:', error);
-    alert('Failed to initialize camera. Please check permissions and try again.');
+  } catch (error: any) {
+    alert(`Initialization error:\n${error.message || error}`);
   }
 })();
 
 function setupFlipButton(session: CameraKitSession) {
-  if (!flipCamera) return;
-  
+  if (!flipCamera) {
+    alert('Flip button not available.');
+    return;
+  }
+
   flipCamera.style.cursor = 'pointer';
   flipCamera.addEventListener('click', () => handleCameraFlip(session));
   updateButtonText();
@@ -60,8 +83,8 @@ async function initializeCamera(session: CameraKitSession) {
     await session.setSource(source);
     await session.play();
 
-  } catch (error) {
-    console.error('Camera initialization failed:', error);
+  } catch (error: any) {
+    alert(`Camera initialization failed:\n${error.message || error}`);
     isBackFacing = true;
     updateButtonText();
   }
@@ -92,18 +115,17 @@ async function handleCameraFlip(session: CameraKitSession) {
     await session.setSource(source);
     await session.play();
 
-  } catch (error) {
-    console.error('Camera flip failed:', error);
-    isBackFacing = !isBackFacing;
+  } catch (error: any) {
+    alert(`Camera flip failed:\n${error.message || error}`);
+    isBackFacing = !isBackFacing; // revert state
     updateButtonText();
-    alert('Failed to switch cameras. Please try again.');
   }
 }
 
 function updateButtonText() {
   if (flipCamera) {
-    flipCamera.textContent = isBackFacing 
-      ? 'Switch to Front Camera' 
+    flipCamera.textContent = isBackFacing
+      ? 'Switch to Front Camera'
       : 'Switch to Back Camera';
   }
 }
