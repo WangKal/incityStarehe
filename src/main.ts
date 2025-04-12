@@ -7,42 +7,43 @@ import {
 
 const liveRenderTarget = document.getElementById('canvas') as HTMLCanvasElement;
 const flipCamera = document.getElementById('flip');
+const errorContainer = document.getElementById('error-container');
 
 let isBackFacing = true;
 let mediaStream: MediaStream;
 
 window.onerror = function (message, source, lineno, colno) {
-  alert(`Global JS Error:\n${message}\nAt ${source}:${lineno}:${colno}`);
+  appendError(`Global JS Error:\n${message}\nAt ${source}:${lineno}:${colno}`);
   return false;
 };
 
 (async function main() {
-  alert('Starting camera initialization...');
+  appendError('Starting camera initialization...');
   try {
     const cameraKit = await bootstrapCameraKit({
       apiToken: 'your-token-here'
     });
 
-    alert('CameraKit bootstrapped');
+    appendError('CameraKit bootstrapped');
 
     const session = await cameraKit.createSession({ liveRenderTarget });
-    alert('Session created');
+    appendError('Session created');
 
     const lens = await cameraKit.lensRepository.loadLens(
       '3e71b80f-6482-4916-9882-6cbeaaa7c72c',
       '63e0d189-2d1f-4e47-a7e5-8ec40b1f947b'
     );
-    alert('Lens loaded');
+    appendError('Lens loaded');
 
     await session.applyLens(lens);
-    alert('Lens applied');
+    appendError('Lens applied');
 
     setupFlipButton(session);
     await initializeCamera(session);
-    alert('Camera initialized and playing');
+    appendError('Camera initialized and playing');
 
   } catch (error: any) {
-    alert('Init error: ' + (error?.message || error));
+    appendError('Init error: ' + (error?.message || error));
     console.error('Initialization error:', error);
   }
 })();
@@ -53,11 +54,11 @@ function setupFlipButton(session: CameraKitSession) {
   flipCamera.style.cursor = 'pointer';
   flipCamera.addEventListener('click', () => handleCameraFlip(session));
   updateButtonText();
-  alert('Flip button ready');
+  appendError('Flip button ready');
 }
 
 async function initializeCamera(session: CameraKitSession) {
-  alert('Requesting camera access...');
+  appendError('Requesting camera access...');
   try {
     mediaStream = await navigator.mediaDevices.getUserMedia({
       video: {
@@ -67,7 +68,7 @@ async function initializeCamera(session: CameraKitSession) {
       }
     });
 
-    alert('Camera access granted');
+    appendError('Camera access granted');
 
     const source = createMediaStreamSource(mediaStream, {
       transform: Transform2D.Identity
@@ -75,10 +76,10 @@ async function initializeCamera(session: CameraKitSession) {
 
     await session.setSource(source);
     await session.play();
-    alert('Camera session is playing');
+    appendError('Camera session is playing');
 
   } catch (error: any) {
-    alert('Camera init error: ' + (error?.message || error));
+    appendError('Camera init error: ' + (error?.message || error));
     console.error('Camera initialization failed:', error);
     isBackFacing = true;
     updateButtonText();
@@ -86,7 +87,7 @@ async function initializeCamera(session: CameraKitSession) {
 }
 
 async function handleCameraFlip(session: CameraKitSession) {
-  alert('Switching camera...');
+  appendError('Switching camera...');
   try {
     isBackFacing = !isBackFacing;
     updateButtonText();
@@ -94,7 +95,7 @@ async function handleCameraFlip(session: CameraKitSession) {
     if (mediaStream) {
       session.pause();
       mediaStream.getTracks().forEach(track => track.stop());
-      alert('Old media stream stopped');
+      appendError('Old media stream stopped');
     }
 
     mediaStream = await navigator.mediaDevices.getUserMedia({
@@ -105,7 +106,7 @@ async function handleCameraFlip(session: CameraKitSession) {
       }
     });
 
-    alert('New camera stream acquired');
+    appendError('New camera stream acquired');
 
     const source = createMediaStreamSource(mediaStream, {
       transform: isBackFacing ? Transform2D.Identity : Transform2D.MirrorX
@@ -113,10 +114,10 @@ async function handleCameraFlip(session: CameraKitSession) {
 
     await session.setSource(source);
     await session.play();
-    alert('Camera switched and playing');
+    appendError('Camera switched and playing');
 
   } catch (error: any) {
-    alert('Flip camera error: ' + (error?.message || error));
+    appendError('Flip camera error: ' + (error?.message || error));
     console.error('Camera flip failed:', error);
     isBackFacing = !isBackFacing;
     updateButtonText();
@@ -128,5 +129,15 @@ function updateButtonText() {
     flipCamera.textContent = isBackFacing
       ? 'Switch to Front Camera'
       : 'Switch to Back Camera';
+  }
+}
+
+// Helper function to append errors to the error container
+function appendError(message: string) {
+  if (errorContainer) {
+    const errorMessage = document.createElement('div');
+    errorMessage.textContent = message;
+    errorContainer.appendChild(errorMessage);
+    errorContainer.scrollTop = errorContainer.scrollHeight; // Scroll to bottom
   }
 }
