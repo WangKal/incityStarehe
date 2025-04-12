@@ -120,3 +120,12 @@ function updateButtonText() {
       : 'Switch to Back Camera';
   }
 }
+// Helper function to append errors to the error container
+function appendError(message: string) {
+  if (errorContainer) {
+    const errorMessage = document.createElement('div');
+    errorMessage.textContent = message;
+    errorContainer.appendChild(errorMessage);
+    errorContainer.scrollTop = errorContainer.scrollHeight; // Scroll to bottom
+  }
+}
