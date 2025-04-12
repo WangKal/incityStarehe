@@ -17,7 +17,7 @@ let isBackFacing = true;
 let mediaStream: MediaStream;
 
 // Global error handlers
-window.onerror = function (message, source, lineno, colno, error) {
+window.onerror = function (message, source, lineno, colno, _error) {
   alert(`JS Error:\n${message}\nSource: ${source}\nLine: ${lineno}:${colno}`);
   return false;
 };
