@@ -7,10 +7,15 @@ import {
 
 const liveRenderTarget = document.getElementById('canvas') as HTMLCanvasElement;
 const flipCamera = document.getElementById('flip');
+const errorContainer = document.getElementById('error-container');
+
 
 let isBackFacing = true;
 let mediaStream: MediaStream;
-
+window.onerror = function (message, source, lineno, colno) {
+  appendError(`Global JS Error:\n${message}\nAt ${source}:${lineno}:${colno}`);
+  return false;
+};
 (async function main() {
   try {
     const cameraKit = await bootstrapCameraKit({
@@ -25,11 +30,19 @@ let mediaStream: MediaStream;
     '63e0d189-2d1f-4e47-a7e5-8ec40b1f947b'
     );
     await session.applyLens(lens);
-
+appendError('Lens applied');
     setupFlipButton(session);
     await initializeCamera(session);
+    appendError('Camera initialized and playing');
 
   } catch (error) {
+
+     let errorMessage = 'Init error: ' + (error?.message || error);
+    // Check if the error has a status code (e.g., HTTP errors)
+    if (error?.response?.status) {
+      errorMessage += ` (Status Code: ${error.response.status})`;
+    }
+    appendError('Init error: ' + (errorMessage));
     console.error('Initialization error:', error);
     alert('Failed to initialize camera. Please check permissions and try again.');
   }
