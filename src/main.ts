@@ -43,7 +43,12 @@ window.onerror = function (message, source, lineno, colno) {
     appendError('Camera initialized and playing');
 
   } catch (error: any) {
-    appendError('Init error: ' + (error));
+     let errorMessage = 'Init error: ' + (error?.message || error);
+    // Check if the error has a status code (e.g., HTTP errors)
+    if (error?.response?.status) {
+      errorMessage += ` (Status Code: ${error.response.status})`;
+    }
+    appendError('Init error: ' + (errorMessage));
     console.error('Initialization error:', error);
   }
 })();
