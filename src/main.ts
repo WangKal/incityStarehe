@@ -35,7 +35,7 @@ appendError('Lens applied');
     await initializeCamera(session);
     appendError('Camera initialized and playing');
 
-  } catch (error) {
+  } catch (error: any) {
 
      let errorMessage = 'Init error: ' + (error?.message || error);
     // Check if the error has a status code (e.g., HTTP errors)
