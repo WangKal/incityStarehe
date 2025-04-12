@@ -30,7 +30,8 @@ window.onerror = function (message, source, lineno, colno) {
     appendError('Session created');
 
     const lens = await cameraKit.lensRepository.loadLens(
-      '3e71b80f-6482-4916-9882-6cbeaaa7c72c'
+      '3e71b80f-6482-4916-9882-6cbeaaa7c72c',
+      '63e0d189-2d1f-4e47-a7e5-8ec40b1f947b'
     );
     appendError('Lens loaded');
 
